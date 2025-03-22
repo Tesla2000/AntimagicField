@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "antimagic_field"
+version = "0.1.0"
+description = "Moved magic constants to separate files"
+authors = ["Tesla2000 <fratajczak124@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dotenv = "^1.0.1"
+pydantic = "^2.8.2"
+toml = "^0.10.2"
+libcst = "^1.7.0"
+litellm = "^1.63.14"
+inflect = "^7.5.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+antimagic_field = "antimagic_field:main"

@@ -1,0 +1,7 @@
+-   id: antimagic_field
+    name: AntimagicField
+    description: Moved magic constants to separate files
+    entry: antimagic_field
+    language: python
+    types: [python]
+    files: ''
