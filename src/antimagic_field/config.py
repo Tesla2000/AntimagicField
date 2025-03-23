@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 from typing import get_origin
 from typing import Literal
 from typing import Optional
@@ -9,6 +10,9 @@ from typing import Type
 
 import toml
 from dotenv import load_dotenv
+from litellm.litellm_core_utils.get_supported_openai_params import (
+    get_supported_openai_params,
+)
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic_core import PydanticUndefined
@@ -22,13 +26,30 @@ class Config(BaseModel):
     _root: Path = Path(__file__).parent
     pos_args: list[str] = Field(default_factory=list)
     config_file: Optional[Path] = None
-    var_location: Literal["directory", "file", "local"] = "directory"
-    var_location_name: str = "constants"
+    consts_location: Literal["directory", "file", "local"] = "directory"
+    consts_location_name: str = "generated_constants"
     modify: bool = True
     include_annotations: bool = False
     const_name_suffix: str = "_CONST"
     root: str = os.getcwd()
-    raise_on_duplicates: bool = False
+    duplicates_solver: Literal["exception", "ignore", "ai"] = "ignore"
+    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ignore"
+    ai_model: str = "gpt-4o-mini"
+    env_file_path: Path = Path(".env")
+
+    def __init__(self, /, **data: Any):
+        super().__init__(**data)
+        params = get_supported_openai_params(model=self.ai_model)
+        assert (
+            "response_format" in params
+        ), f"Model must support response format. {self.ai_model} doesn't"
+        load_dotenv(self._env_path)
+
+    @property
+    def _env_path(self) -> Path:
+        if self.env_file_path.is_absolute():
+            return self.env_file_path
+        return self.root / self.env_file_path
 
 
 def parse_arguments(config_class: Type[Config]):

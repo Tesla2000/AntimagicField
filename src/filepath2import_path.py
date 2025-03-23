@@ -11,4 +11,4 @@ def filepath2import_path(
     project_root = project_root or os.getcwd()
     return ".".join(
         filepath.absolute().relative_to(project_root).with_suffix("").parts
-    )
+    ).removesuffix(".__init__")
