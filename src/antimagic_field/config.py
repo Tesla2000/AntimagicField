@@ -10,9 +10,6 @@ from typing import Type
 
 import toml
 from dotenv import load_dotenv
-from litellm.litellm_core_utils.get_supported_openai_params import (
-    get_supported_openai_params,
-)
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic_core import PydanticUndefined
@@ -33,16 +30,13 @@ class Config(BaseModel):
     const_name_suffix: str = "_CONST"
     root: str = os.getcwd()
     duplicates_solver: Literal["exception", "ignore", "ai"] = "ignore"
-    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ignore"
-    ai_model: str = "gpt-4o-mini"
+    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ai"
+    ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
+    ai_solving_batch: int = 30
     env_file_path: Path = Path(".env")
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)
-        params = get_supported_openai_params(model=self.ai_model)
-        assert (
-            "response_format" in params
-        ), f"Model must support response format. {self.ai_model} doesn't"
         load_dotenv(self._env_path)
 
     @property

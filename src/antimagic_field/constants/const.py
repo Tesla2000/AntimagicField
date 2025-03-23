@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-import inflect
 import libcst
 
 from src.antimagic_field.config import Config
@@ -55,22 +53,13 @@ class Const(ConstBase):
             all(map(str.isalnum, string.replace("_", "")))
             and len(string.split()) == 1
         ):
-            if string[0].isnumeric():
-                num = re.findall(r"\d+", string)[0]
-                string = re.sub(
-                    r"\d+_?",
-                    p.number_to_words(num, comma="", andword="") + "_",
-                    string,
-                    1,
-                ).replace(" ", "_")
-            return string.replace("-", "_").upper().lstrip("_")
+            return self._format_const_name(string)
         return None
 
     def set_const_name(self, const_name: Optional[str]):
-        self._const_name = const_name
-
-
-p = inflect.engine()
+        if const_name is None:
+            self._const_name = const_name
+        self._const_name = self._format_const_name(const_name)
 
 
 _known_strings = {

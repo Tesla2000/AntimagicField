@@ -1,18 +1,22 @@
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Sequence
 from functools import partial
+from itertools import batched
 from itertools import chain
 from pathlib import Path
 
 from libcst import parse_module
+from litellm import completion
 from more_itertools.more import map_reduce
 
 from .config import Config
 from .config import create_config_with_args
 from .config import parse_arguments
 from .constants.previous_const import PreviousConst
+from .create_response_format import create_response_format
 from .extract_constants import extract_constants
 from .group2files import group2files
 from .read_consts import read_consts
@@ -113,6 +117,36 @@ def _main(config: Config):
         consts = tuple(
             filter(lambda const: const.value not in duplicate_values, consts)
         )
+    if ai_solved_constants := tuple(
+        filter(lambda const: const.const_name is None, all_consts)
+    ):
+        unique_solved = {
+            const.value: const for const in ai_solved_constants
+        }.values()
+        for solving_batch in batched(unique_solved, config.ai_solving_batch):
+            solved_values = tuple(const.value for const in solving_batch)
+            solutions = json.loads(
+                completion(
+                    config.ai_model,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": (
+                                f"Peak suitable constant names for the following string. Note constant names can't repeat and can't be in this set {frozenset(const.const_name for const in all_consts)}"
+                            ),
+                        }
+                    ],
+                    temperature=0.0,
+                    response_format=create_response_format(solving_batch),
+                ).choices[0]["message"]["content"]
+            )
+            for const in ai_solved_constants:
+                if const.value in solved_values and (
+                    solution := solutions.get(
+                        f"string{solved_values.index(const.value) + 1}"
+                    )
+                ):
+                    const.set_const_name(solution)
     if not consts:
         return 0
     if config.modify is False and consts:
@@ -132,8 +166,6 @@ def _main(config: Config):
                 ),
             )
         )
-    # if ai_solved_constants := tuple(filter(lambda const: const.const_name is None, all_consts)):
-    #     completion(config.ai_model, messages=[{"role": "user", "content": f"Peak suitable constant names for the following string. Note constant names can't repeat and can't be in this set {frozenset(previous_constants.values())}"}], temperature=.0, response_format=create_response_format(ai_solved_constants))
     grouped_files = group2files(all_consts, config)
     file_switching_consts = map_reduce(
         filter(

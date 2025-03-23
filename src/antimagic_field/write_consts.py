@@ -42,7 +42,7 @@ def write_consts(
         + moved_consts_str
         + "\n".join(
             frozenset(
-                f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{const.value}"]] = "{const.value}"'
+                f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"]] = "{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"'
                 for const in consts
                 if const.const_name + config.const_name_suffix
             )

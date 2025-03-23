@@ -4,10 +4,17 @@ from collections.abc import Sequence
 from itertools import chain
 from itertools import filterfalse
 from typing import Optional
+from typing import Union
 
 from libcst import Annotation
+from libcst import ClassDef
+from libcst import ConcatenatedString
 from libcst import CSTNode
+from libcst import Expr
+from libcst import FormattedString
+from libcst import FunctionDef
 from libcst import Name
+from libcst import SimpleStatementLine
 from libcst import SimpleString
 from libcst import Subscript
 
@@ -20,6 +27,24 @@ class MagicSeeker(Transformer):
         super().__init__(config)
         self._simple_strings: list["SimpleString"] = list()
         self._string_annotations: list["SimpleString"] = list()
+        self._docstrings: list[Union["SimpleString", "FormattedString"]] = (
+            list()
+        )
+        self._strings_in_concatenated: list[
+            Union["SimpleString", "FormattedString"]
+        ] = list()
+
+    def visit_ClassDef_body(self, node: "ClassDef") -> None:
+        doc = self._get_docstring(node)
+        if doc:
+            self._docstrings.append(doc)
+        return super().visit_ClassDef_body(node)
+
+    def visit_FunctionDef_body(self, node: "FunctionDef") -> None:
+        doc = self._get_docstring(node)
+        if doc:
+            self._docstrings.append(doc)
+        return super().visit_FunctionDef_body(node)
 
     def visit_SimpleString(self, node: "SimpleString") -> Optional[bool]:
         self._simple_strings.append(node)
@@ -45,6 +70,31 @@ class MagicSeeker(Transformer):
             )
         return super().visit_Subscript(node)
 
+    def visit_ConcatenatedString(
+        self, node: "ConcatenatedString"
+    ) -> Optional[bool]:
+        self._strings_in_concatenated.extend(
+            chain.from_iterable(
+                (
+                    (
+                        [node.left]
+                        if isinstance(
+                            node.left, (SimpleString, FormattedString)
+                        )
+                        else self.get_magical_strings(node.left, self.config)
+                    ),
+                    (
+                        [node.right]
+                        if isinstance(
+                            node.right, (SimpleString, FormattedString)
+                        )
+                        else self.get_magical_strings(node.right, self.config)
+                    ),
+                )
+            )
+        )
+        return super().visit_ConcatenatedString(node)
+
     @classmethod
     def get_magical_strings(
         cls, module: CSTNode, config: Config
@@ -55,6 +105,25 @@ class MagicSeeker(Transformer):
             return seeker._simple_strings
         return tuple(
             filterfalse(
-                seeker._string_annotations.__contains__, seeker._simple_strings
+                (
+                    seeker._string_annotations
+                    + seeker._docstrings
+                    + seeker._strings_in_concatenated
+                ).__contains__,
+                seeker._simple_strings,
             )
         )
+
+    def _get_docstring(
+        self, node: Union["ClassDef", "FunctionDef"]
+    ) -> Optional[Union["SimpleString", "FormattedString"]]:
+        if (
+            isinstance(
+                line_statements := node.body.body[0], SimpleStatementLine
+            )
+            and isinstance(expr := line_statements.body[0], Expr)
+            and isinstance(
+                string := expr.value, (SimpleString, FormattedString)
+            )
+        ):
+            return string
