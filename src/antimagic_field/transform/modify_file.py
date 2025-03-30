@@ -6,10 +6,10 @@ from pathlib import Path
 from libcst import Module
 from more_itertools.more import map_reduce
 
-from ...filepath2import_path import filepath2import_path
 from ..config import Config
 from ..constants.const import Const
 from .magic_remover import MagicRemover
+from src.antimagic_field.filepath2import_path import filepath2import_path
 
 
 def modify_file(

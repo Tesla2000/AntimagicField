@@ -16,12 +16,11 @@ class PreviousConst(ConstBase):
     previous_written_filepath: Optional[Path] = None
     previous_const_name: Optional[str] = None
 
-    def __post_init__(self):
-        self.const_name = self.const_name.lstrip("_")
-
-    def set_const_name(self, const_name: Optional[str]):
+    def set_const_name(self, const_name: str, suffix: str = ""):
         self.previous_const_name = self.const_name
-        self.const_name = const_name.lstrip("_")
+        self.const_name = self._format_const_name(const_name)
+        if self.const_name:
+            self.const_name += suffix
 
     def set_import_path(self, path: Path):
         self.previous_written_filepath = self.written_filepath

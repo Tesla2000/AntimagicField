@@ -49,17 +49,20 @@ class Const(ConstBase):
         string = self.string_node.evaluated_value
         if string in _known_strings:
             return _known_strings[string]
-        if (
-            all(map(str.isalnum, string.replace("_", "")))
-            and len(string.split()) == 1
-        ):
-            return self._format_const_name(string)
-        return None
+        return self._format_const_name(string)
 
-    def set_const_name(self, const_name: Optional[str]):
+    def set_const_name(
+        self,
+        const_name: Optional[str],
+        suffix: str = "",
+        max_n_parts: Optional[int] = 3,
+    ):
         if const_name is None:
             self._const_name = const_name
-        self._const_name = self._format_const_name(const_name)
+        else:
+            self._const_name = self._format_const_name(const_name, max_n_parts)
+            if self._const_name:
+                self._const_name += suffix
 
 
 _known_strings = {

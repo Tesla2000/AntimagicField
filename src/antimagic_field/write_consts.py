@@ -4,10 +4,10 @@ from collections.abc import Collection
 from collections.abc import Sequence
 from pathlib import Path
 
-from ..filepath2import_path import filepath2import_path
 from .config import Config
 from .constants.const_base import ConstBase
 from .constants.previous_const import PreviousConst
+from src.antimagic_field.filepath2import_path import filepath2import_path
 
 
 def write_consts(
@@ -27,12 +27,15 @@ def write_consts(
     if moved_consts:
         moved_consts_str = (
             "\n".join(
-                f"from {filepath2import_path(const.written_filepath)} import {const.const_name}{config.const_name_suffix} as {const.previous_const_name}{config.const_name_suffix} "
+                f"from {filepath2import_path(const.written_filepath)} import {const.const_name}{config.const_name_suffix}"
+                + bool(const.previous_const_name)
+                * f" as {const.previous_const_name}{config.const_name_suffix}"
                 for const in moved_consts
             )
             + "\n_ = "
             + ", ".join(
-                const.previous_const_name + config.const_name_suffix
+                (const.previous_const_name or const.const_name)
+                + config.const_name_suffix
                 for const in moved_consts
             )
             + "\n"
@@ -41,10 +44,12 @@ def write_consts(
         "from typing import Final\nfrom typing import Literal\n"
         + moved_consts_str
         + "\n".join(
-            frozenset(
-                f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"]] = "{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"'
-                for const in consts
-                if const.const_name + config.const_name_suffix
+            sorted(
+                frozenset(
+                    f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"]] = "{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"'
+                    for const in consts
+                    if const.const_name + config.const_name_suffix
+                )
             )
         )
     )
