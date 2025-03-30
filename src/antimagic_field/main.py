@@ -60,7 +60,14 @@ def _main(config: Config):
     fail = 0
     paths = map(Path, config.pos_args)
     modified_files: Sequence[Path] = tuple(
-        filter(lambda path: path.suffix == ".py", paths)
+        filter(
+            lambda path: path.suffix == ".py"
+            and (
+                config.consts_location != "directory"
+                or not path.is_relative_to(Path(config.consts_location_name))
+            ),
+            paths,
+        )
     )
     modules = {file: parse_module(file.read_text()) for file in modified_files}
     consts = tuple(
