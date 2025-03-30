@@ -7,8 +7,8 @@ from pathlib import Path
 from libcst import Module
 
 from .config import Config
+from .constants.const import Const
 from .transform.magic_seeker import MagicSeeker
-from src.antimagic_field.constants.const import Const
 
 
 def extract_constants(

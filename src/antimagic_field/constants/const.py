@@ -6,8 +6,8 @@ from typing import Optional
 
 import libcst
 
-from src.antimagic_field.config import Config
-from src.antimagic_field.constants.const_base import ConstBase
+from ..config import Config
+from ..constants.const_base import ConstBase
 
 
 @dataclass(slots=True)

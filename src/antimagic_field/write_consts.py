@@ -7,7 +7,7 @@ from pathlib import Path
 from .config import Config
 from .constants.const_base import ConstBase
 from .constants.previous_const import PreviousConst
-from src.antimagic_field.filepath2import_path import filepath2import_path
+from .filepath2import_path import filepath2import_path
 
 
 def write_consts(
