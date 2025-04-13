@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -21,17 +22,11 @@ class Const(ConstBase):
         if config.consts_location == "directory":
             if self._import_filepath:
                 return self._import_filepath.absolute()
-            return self.origin2import(self.origin_filepath, config).absolute()
+            return origin2import(self.origin_filepath, config).absolute()
         raise ValueError("var_location can only be folder for now")
 
     def set_import_path(self, path: Path):
         self._import_filepath = path.absolute()
-
-    @staticmethod
-    def origin2import(origin_filepath: Path, config: Config) -> Path:
-        return Path(
-            config.consts_location_name
-        ) / origin_filepath.absolute().relative_to(Path().absolute())
 
     def is_path_relative(self, parent_path: Path) -> bool:
         return self.origin_filepath.absolute().is_relative_to(
@@ -40,13 +35,15 @@ class Const(ConstBase):
 
     @property
     def value(self) -> str:
-        return self.string_node.evaluated_value
+        return self.string_node.evaluated_value.replace('"', r"\"").replace(
+            "'", r"\'"
+        )
 
     @property
     def const_name(self) -> Optional[str]:
         if self._const_name is not None:
             return self._const_name
-        string = self.string_node.evaluated_value
+        string = self.value
         if string in _known_strings:
             return _known_strings[string]
         return self._format_const_name(string)
@@ -63,6 +60,17 @@ class Const(ConstBase):
             self._const_name = self._format_const_name(const_name, max_n_parts)
             if self._const_name:
                 self._const_name += suffix
+
+
+def origin2import(origin_filepath: Path, config: Config) -> Path:
+    return _origin2import(origin_filepath, config.consts_location_name)
+
+
+@lru_cache
+def _origin2import(origin_filepath: Path, consts_location_name: str) -> Path:
+    return Path(consts_location_name) / origin_filepath.absolute().relative_to(
+        Path().absolute()
+    )
 
 
 _known_strings = {

@@ -31,3 +31,7 @@ class PreviousConst(ConstBase):
 
     def get_import_filepath(self, _: Config) -> Path:
         return self.written_filepath.absolute()
+
+    @property
+    def defined_const_name(self):
+        return self.const_name or self.previous_const_name

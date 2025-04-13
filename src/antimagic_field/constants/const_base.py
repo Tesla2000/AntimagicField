@@ -51,7 +51,7 @@ class ConstBase(ABC):
             and max_n_parts is not None
         ):
             return None
-        if const_name[0].isnumeric():
+        if const_name and const_name[0].isnumeric():
             num = re.findall(r"[\d,.]+", const_name)[0]
             const_name = re.sub(
                 r"[\d,.]+_?",
@@ -65,6 +65,10 @@ class ConstBase(ABC):
         if const_name != "_".join(const_name.split("_")[:max_n_parts]):
             return None
         return re.sub(r"_+", "_", const_name)
+
+    @property
+    def defined_const_name(self):
+        return self.const_name
 
 
 allowed_chars = (*string.digits, *string.ascii_letters, "_")

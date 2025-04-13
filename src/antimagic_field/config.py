@@ -32,7 +32,7 @@ class Config(BaseModel):
     duplicates_solver: Literal["exception", "ignore", "most_common"] = (
         "most_common"
     )
-    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ai"
+    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ignore"
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3

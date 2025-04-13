@@ -8,6 +8,7 @@ from more_itertools import map_reduce
 
 from .config import Config
 from .constants.const import Const
+from .constants.const import origin2import
 from .constants.const_base import ConstBase
 
 
@@ -23,14 +24,14 @@ def group2files(
         filepath: Path = new_const.origin_filepath
         while not all(
             const.is_path_relative(filepath)
-            or const.is_path_relative(Const.origin2import(filepath, config))
+            or const.is_path_relative(origin2import(filepath, config))
             for const in constants
         ):
             filepath = filepath.parent
         if filepath.is_dir():
             filepath = filepath.joinpath("__init__.py")
         tuple(
-            const.set_import_path(Const.origin2import(filepath, config))
+            const.set_import_path(origin2import(filepath, config))
             for const in constants
         )
     return map_reduce(

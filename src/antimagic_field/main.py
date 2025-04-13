@@ -22,6 +22,7 @@ from .constants.const_base import ConstBase
 from .constants.previous_const import PreviousConst
 from .exceptions import FailedToSolveDuplicates
 from .extract_constants import extract_constants
+from .filepath2import_path import filepath2import_path
 from .group2files import group2files
 from .read_consts import read_consts
 from .save2files import save2files
@@ -194,6 +195,10 @@ def _main(config: Config):
             filepath,
             module=modules[filepath],
             consts=grouped_consts.get(filepath, []),
+            renamed_consts={
+                filepath2import_path(key): value
+                for key, value in renamed_consts.items()
+            },
             config=config,
         )
     return fail
