@@ -28,6 +28,7 @@ class Config(BaseModel):
     modify: bool = True
     include_annotations: bool = False
     const_name_suffix: str = "_CONST"
+    excluded: str = ""
     root: str = os.getcwd()
     duplicates_solver: Literal["exception", "ignore", "most_common"] = (
         "most_common"
@@ -48,6 +49,14 @@ class Config(BaseModel):
         if self.env_file_path.is_absolute():
             return self.env_file_path
         return self.root / self.env_file_path
+
+    def is_excluded(self, path: Path) -> bool:
+        return any(
+            map(
+                path.is_relative_to,
+                map(Path.absolute, map(Path, self.excluded.split(","))),
+            )
+        )
 
 
 def parse_arguments(config_class: Type[Config]):

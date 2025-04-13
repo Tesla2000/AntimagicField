@@ -66,7 +66,8 @@ def _main(config: Config):
             and (
                 config.consts_location != "directory"
                 or not path.is_relative_to(Path(config.consts_location_name))
-            ),
+            )
+            and not config.is_excluded(path),
             paths,
         )
     )
