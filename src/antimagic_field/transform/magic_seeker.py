@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Union
 
 from libcst import Annotation
+from libcst import Call
 from libcst import ClassDef
 from libcst import ConcatenatedString
 from libcst import CSTNode
@@ -19,14 +20,15 @@ from libcst import SimpleString
 from libcst import Subscript
 
 from ..config import Config
-from .transformer import Transformer
+from .transformer import Visitor
 
 
-class MagicSeeker(Transformer):
+class MagicSeeker(Visitor):
     def __init__(self, config: Config):
         super().__init__(config)
         self._simple_strings: list["SimpleString"] = list()
         self._string_annotations: list["SimpleString"] = list()
+        self._typevar_strings: list["SimpleString"] = list()
         self._docstrings: list[Union["SimpleString", "FormattedString"]] = (
             list()
         )
@@ -55,6 +57,15 @@ class MagicSeeker(Transformer):
             self.get_magical_strings(node.annotation, self.config)
         )
         return super().visit_Annotation(node)
+
+    def visit_Call(self, node: "Call") -> Optional[bool]:
+        if (
+            isinstance(node.func, Name)
+            and node.func.value == "TypeVar"
+            and isinstance(node.args[0].value, SimpleString)
+        ):
+            self._typevar_strings.append(node.args[0].value)
+        return super().visit_Call(node)
 
     def visit_Subscript(self, node: "Subscript") -> Optional[bool]:
         if (
@@ -109,6 +120,7 @@ class MagicSeeker(Transformer):
                     seeker._string_annotations
                     + seeker._docstrings
                     + seeker._strings_in_concatenated
+                    + seeker._typevar_strings
                 ).__contains__,
                 seeker._simple_strings,
             )

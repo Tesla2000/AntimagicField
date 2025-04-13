@@ -28,7 +28,7 @@ class Config(BaseModel):
     modify: bool = True
     include_annotations: bool = False
     const_name_suffix: str = "_CONST"
-    excluded: str = ""
+    exclude: str = ""
     root: str = os.getcwd()
     duplicates_solver: Literal["exception", "ignore", "most_common"] = (
         "most_common"
@@ -54,7 +54,7 @@ class Config(BaseModel):
         return any(
             map(
                 path.is_relative_to,
-                map(Path.absolute, map(Path, self.excluded.split(","))),
+                map(Path.absolute, map(Path, self.exclude.split(","))),
             )
         )
 
