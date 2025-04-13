@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections import Counter
 from collections.abc import Collection
 from collections.abc import Sequence
@@ -59,6 +60,7 @@ def main() -> int:
 
 def _main(config: Config):
     fail = 0
+    print(" ".join(sys.argv))
     paths = map(Path, config.pos_args)
     modified_files: Sequence[Path] = tuple(
         filter(
