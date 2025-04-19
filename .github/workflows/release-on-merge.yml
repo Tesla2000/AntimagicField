@@ -1,0 +1,45 @@
+name: Release on PR Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed to get all tags
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          TAG=$(git tag --sort=-v:refname | grep '^v' | head -n 1)
+          echo "Latest tag: $TAG"
+          if [ -z "$TAG" ]; then
+            echo "tag=v0.1.0" >> $GITHUB_OUTPUT
+          else
+            VERSION=$(echo $TAG | sed 's/^v//')
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            PATCH=$((PATCH + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+            echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          name: Release ${{ steps.get_tag.outputs.tag }}
+          body: |
+            Pull Request #${{ github.event.pull_request.number }} was merged into `main`.
+
+            **Title**: ${{ github.event.pull_request.title }}
+            **Author**: ${{ github.event.pull_request.user.login }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

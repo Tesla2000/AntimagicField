@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Collection
 from collections.abc import Sequence
+from itertools import filterfalse
 from operator import attrgetter
 from pathlib import Path
 from typing import Optional
@@ -10,6 +11,7 @@ import libcst
 from libcst import Assign
 from libcst import ImportAlias
 from libcst import ImportFrom
+from libcst import Module
 from libcst import Name
 
 from .config import Config
@@ -61,6 +63,15 @@ def write_consts(
             return super().visit_ImportFrom(node)
 
     module.visit(ImportsExtractor())
+    previous_assignments = []
+
+    class PreviousAssignmentExtractor(libcst.CSTVisitor):
+        def visit_Assign(self, node: "Assign") -> Optional[bool]:
+            if len(node.targets) == 1 and isinstance(node.children[1], Name):
+                previous_assignments.append("\n" + Module([node]).code)
+            return super().visit_Assign(node)
+
+    module.visit(PreviousAssignmentExtractor())
     if moved_consts or previous_moved_consts_imports:
         moved_consts_str = (
             "\n".join(
@@ -95,16 +106,22 @@ def write_consts(
         + "\n".join(
             sorted(
                 frozenset(
-                    f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"]] = "{('\n' in const.value) * '""'}{const.value}{('\n' in const.value) * '""'}"'
+                    f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = "{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
                     for const in consts
                     if const.defined_const_name + config.const_name_suffix
                 )
             )
         )
+        + "".join(previous_assignments)
     )
     contents = contents.replace('"\n"', '"\\n"')
     contents += "".join(
-        f"\n{key}{config.const_name_suffix} = {value}{config.const_name_suffix}"
-        for key, value in name_translator.items()
+        filterfalse(
+            previous_assignments.__contains__,
+            (
+                f"\n{key}{config.const_name_suffix} = {value}{config.const_name_suffix}"
+                for key, value in name_translator.items()
+            ),
+        )
     )
     consts_file_path.write_text(contents)
