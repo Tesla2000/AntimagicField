@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Union
 
 from libcst import Annotation
+from libcst import Assign
 from libcst import Call
 from libcst import ClassDef
 from libcst import ConcatenatedString
@@ -27,6 +28,9 @@ class MagicSeeker(Visitor):
     def __init__(self, config: Config):
         super().__init__(config)
         self._simple_strings: list["SimpleString"] = list()
+        self._simple_string_consts_assignment: list[
+            Union["SimpleString", "FormattedString"]
+        ] = list()
         self._string_annotations: list["SimpleString"] = list()
         self._typevar_strings: list["SimpleString"] = list()
         self._docstrings: list[Union["SimpleString", "FormattedString"]] = (
@@ -47,6 +51,15 @@ class MagicSeeker(Visitor):
         if doc:
             self._docstrings.append(doc)
         return super().visit_FunctionDef_body(node)
+
+    def visit_Assign(self, node: "Assign") -> Optional[bool]:
+        if (
+            isinstance(name := node.targets[0].target, Name)
+            and name.value.isupper()
+            and isinstance(node.value, (SimpleString, FormattedString))
+        ):
+            self._simple_string_consts_assignment.append(node.value)
+        return super().visit_Assign(node)
 
     def visit_SimpleString(self, node: "SimpleString") -> Optional[bool]:
         self._simple_strings.append(node)
@@ -121,6 +134,7 @@ class MagicSeeker(Visitor):
                     + seeker._docstrings
                     + seeker._strings_in_concatenated
                     + seeker._typevar_strings
+                    + seeker._simple_string_consts_assignment
                 ).__contains__,
                 seeker._simple_strings,
             )
