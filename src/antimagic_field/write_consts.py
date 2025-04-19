@@ -63,15 +63,6 @@ def write_consts(
             return super().visit_ImportFrom(node)
 
     module.visit(ImportsExtractor())
-    previous_assignments = []
-
-    class PreviousAssignmentExtractor(libcst.CSTVisitor):
-        def visit_Assign(self, node: "Assign") -> Optional[bool]:
-            if len(node.targets) == 1 and isinstance(node.children[1], Name):
-                previous_assignments.append("\n" + Module([node]).code)
-            return super().visit_Assign(node)
-
-    module.visit(PreviousAssignmentExtractor())
     if moved_consts or previous_moved_consts_imports:
         moved_consts_str = (
             "\n".join(
@@ -100,20 +91,38 @@ def write_consts(
             )
             + "\n"
         )
+    names = tuple(
+        name_translator.get(const.const_name, const.const_name)
+        + config.const_name_suffix
+        for const in consts
+    )
     contents = (
         "from typing import Final\nfrom typing import Literal\n"
         + moved_consts_str
         + "\n".join(
             sorted(
                 frozenset(
-                    f'{name_translator.get(const.const_name, const.const_name)}{config.const_name_suffix}: Final[Literal["{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = "{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
-                    for const in consts
-                    if const.defined_const_name + config.const_name_suffix
+                    f'{name}: Final[Literal["{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = "{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
+                    for name, const in zip(names, consts)
                 )
             )
         )
-        + "".join(previous_assignments)
     )
+
+    previous_assignments = []
+
+    class PreviousAssignmentExtractor(libcst.CSTVisitor):
+        def visit_Assign(self, node: "Assign") -> Optional[bool]:
+            if (
+                len(node.targets) == 1
+                and isinstance(node.children[1], Name)
+                and isinstance(node.targets[0].target, Name)
+                and node.targets[0].target.value not in (*names, "_")
+            ):
+                previous_assignments.append("\n" + Module([node]).code)
+            return super().visit_Assign(node)
+
+    module.visit(PreviousAssignmentExtractor())
     contents = contents.replace('"\n"', '"\\n"')
     contents += "".join(
         filterfalse(
@@ -124,4 +133,5 @@ def write_consts(
             ),
         )
     )
+    contents += "".join(previous_assignments)
     consts_file_path.write_text(contents)

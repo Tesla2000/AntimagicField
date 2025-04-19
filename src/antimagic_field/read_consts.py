@@ -29,18 +29,41 @@ class _ConstantsGetter(libcst.CSTTransformer):
         self.consts = []
 
     def visit_Assign(self, node: "Assign") -> Optional[bool]:
-        if (
-            len(node.targets) == 1
-            and isinstance((target := node.targets[0].target), Name)
-            and isinstance(node.value, SimpleString)
+        if len(node.targets) == 1 and isinstance(
+            (target := node.targets[0].target), Name
         ):
-            self.consts.append(
-                PreviousConst(
-                    target.value.removesuffix(self.config.const_name_suffix),
-                    node.value.evaluated_value,
-                    self.filepath,
+            if isinstance(node.value, SimpleString):
+                self.consts.append(
+                    PreviousConst(
+                        target.value.removesuffix(
+                            self.config.const_name_suffix
+                        ),
+                        node.value.evaluated_value,
+                        self.filepath,
+                    )
                 )
-            )
+            if isinstance(node.value, Name):
+                in_file_consts = next(
+                    filter(
+                        lambda const: const.const_name
+                        == node.value.value.removesuffix(
+                            self.config.const_name_suffix
+                        ),
+                        self.consts,
+                    ),
+                    None,
+                )
+                if not in_file_consts:
+                    return super().visit_Assign(node)
+                self.consts.append(
+                    PreviousConst(
+                        target.value.removesuffix(
+                            self.config.const_name_suffix
+                        ),
+                        in_file_consts.value,
+                        self.filepath,
+                    )
+                )
         return super().visit_Assign(node)
 
     def visit_AnnAssign(self, node: "AnnAssign") -> Optional[bool]:

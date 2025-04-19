@@ -53,7 +53,7 @@ class Config(BaseModel):
     def is_excluded(self, path: Path) -> bool:
         return any(
             map(
-                path.is_relative_to,
+                path.absolute().is_relative_to,
                 map(Path.absolute, map(Path, self.exclude.split(","))),
             )
         )

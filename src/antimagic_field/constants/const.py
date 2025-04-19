@@ -35,9 +35,7 @@ class Const(ConstBase):
 
     @property
     def value(self) -> str:
-        return self.string_node.evaluated_value.replace('"', r"\"").replace(
-            "'", r"\'"
-        )
+        return self.string_node.evaluated_value
 
     @property
     def const_name(self) -> Optional[str]:
@@ -75,6 +73,9 @@ def _origin2import(origin_filepath: Path, consts_location_name: str) -> Path:
 
 _known_strings = {
     "\n": "NEWLINE",
+    "*": "STAR",
+    ", ": "COMA_SPACE",
+    "?": "QUESTION_MARK",
     "": "EMPTY",
     "_": "UNDERSCORE",
     " ": "SPACE",
