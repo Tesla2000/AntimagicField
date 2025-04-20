@@ -102,7 +102,7 @@ def write_consts(
         + "\n".join(
             sorted(
                 frozenset(
-                    f'{name}: Final[Literal["{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = "{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
+                    f'{name}: Final[Literal[{"r" * const.is_rstring}"{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = {"r" * const.is_rstring}"{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
                     for name, const in zip(names, consts)
                 )
             )

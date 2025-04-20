@@ -16,6 +16,7 @@ from ..config import Config
 class ConstBase(ABC):
     const_name: str
     value: str
+    is_rstring: bool
 
     @abstractmethod
     def set_const_name(self, const_name: Optional[str], suffix: str):

@@ -35,6 +35,10 @@ class Const(ConstBase):
         )
 
     @property
+    def is_rstring(self) -> bool:
+        return self.string_node.prefix == "r"
+
+    @property
     def value(self) -> str:
         if isinstance(self.string_node, libcst.SimpleString):
             return self.string_node.evaluated_value

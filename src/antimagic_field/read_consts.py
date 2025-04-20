@@ -40,6 +40,7 @@ class _ConstantsGetter(libcst.CSTTransformer):
                         ),
                         node.value.evaluated_value,
                         self.filepath,
+                        is_rstring=node.value.prefix == "r",
                     )
                 )
             if isinstance(node.value, Name):
@@ -75,6 +76,7 @@ class _ConstantsGetter(libcst.CSTTransformer):
                     target.value.removesuffix(self.config.const_name_suffix),
                     node.value.evaluated_value,
                     self.filepath,
+                    is_rstring=node.value.prefix == "r",
                 )
             )
         return super().visit_AnnAssign(node)

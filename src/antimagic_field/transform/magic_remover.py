@@ -47,7 +47,7 @@ class MagicRemover(Transformer):
 
     def leave_FormattedString(
         self, original_node: "FormattedString", updated_node: "FormattedString"
-    ) -> Union["FormattedString", "Name"]:
+    ) -> Union["FormattedString", "Expr"]:
         if not (const_name := self.cst_str2const.get(original_node)):
             return updated_node
         return Expr(

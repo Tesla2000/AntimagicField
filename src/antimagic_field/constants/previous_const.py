@@ -15,6 +15,7 @@ class PreviousConst(ConstBase):
     written_filepath: Path
     previous_written_filepath: Optional[Path] = None
     previous_const_name: Optional[str] = None
+    is_rstring: bool = False
 
     def set_const_name(self, const_name: str, suffix: str = ""):
         self.previous_const_name = self.const_name
