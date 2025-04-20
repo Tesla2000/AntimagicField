@@ -50,7 +50,7 @@ class Config(BaseModel):
         return self.root / self.env_file_path
 
     def is_excluded(self, path: Path) -> bool:
-        return any(
+        return self.exclude and any(
             map(
                 path.absolute().is_relative_to,
                 map(Path.absolute, map(Path, self.exclude.split(","))),
