@@ -41,9 +41,13 @@ class ConstBase(ABC):
         const_name = "".join(
             filter(
                 allowed_chars.__contains__,
-                re.sub(r"[\s-]+", "_", const_name).upper().lstrip("_"),
+                re.sub(
+                    r"([a-z])([A-Z])",
+                    r"\1_\2",
+                    re.sub(r"[\s/-]+", "_", const_name),
+                ).upper(),
             )
-        )
+        ).strip("_")
         if (
             not "".join(
                 filterfalse(string.hexdigits.__contains__, const_name)

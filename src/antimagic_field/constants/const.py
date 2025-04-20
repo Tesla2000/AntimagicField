@@ -9,11 +9,12 @@ import libcst
 
 from ..config import Config
 from ..constants.const_base import ConstBase
+from ..utils.formated_string2string import formated_string2string
 
 
 @dataclass(slots=True)
 class Const(ConstBase):
-    string_node: libcst.SimpleString
+    string_node: libcst.SimpleString | libcst.FormattedString
     origin_filepath: Path
     _import_filepath: Optional[Path] = None
     _const_name: Optional[str] = None
@@ -35,13 +36,19 @@ class Const(ConstBase):
 
     @property
     def value(self) -> str:
-        return self.string_node.evaluated_value
+        if isinstance(self.string_node, libcst.SimpleString):
+            return self.string_node.evaluated_value
+        if isinstance(self.string_node, libcst.FormattedString):
+            return formated_string2string(self.string_node)
+        raise ValueError()
 
     @property
     def const_name(self) -> Optional[str]:
         if self._const_name is not None:
             return self._const_name
         string = self.value
+        if isinstance(self.string_node, libcst.FormattedString):
+            string += "_formatted"
         if string in _known_strings:
             return _known_strings[string]
         return self._format_const_name(string)

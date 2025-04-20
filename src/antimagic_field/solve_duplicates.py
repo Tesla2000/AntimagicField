@@ -21,7 +21,10 @@ def solve_duplicates(
             first, second = i, not i
             if values[first].capitalize() == values[second]:
                 tuple(
-                    const.set_const_name(const.const_name, "_LOWERCASE")
+                    const.set_const_name(
+                        const.const_name,
+                        "_LOWERCASE",
+                    )
                     for const in constants
                     if const.value == values[first]
                 )

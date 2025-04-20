@@ -28,6 +28,7 @@ class MagicSeeker(Visitor):
     def __init__(self, config: Config):
         super().__init__(config)
         self._simple_strings: list["SimpleString"] = list()
+        self._formated_strings: list["FormattedString"] = list()
         self._simple_string_consts_assignment: list[
             Union["SimpleString", "FormattedString"]
         ] = list()
@@ -64,6 +65,10 @@ class MagicSeeker(Visitor):
     def visit_SimpleString(self, node: "SimpleString") -> Optional[bool]:
         self._simple_strings.append(node)
         return super().visit_SimpleString(node)
+
+    def visit_FormattedString(self, node: "FormattedString") -> Optional[bool]:
+        self._formated_strings.append(node)
+        return super().visit_FormattedString(node)
 
     def visit_Annotation(self, node: "Annotation") -> Optional[bool]:
         self._string_annotations.extend(
@@ -122,7 +127,7 @@ class MagicSeeker(Visitor):
     @classmethod
     def get_magical_strings(
         cls, module: CSTNode, config: Config
-    ) -> Sequence["SimpleString"]:
+    ) -> Sequence[Union["SimpleString", "FormattedString"]]:
         seeker = cls(config)
         module.visit(seeker)
         if config.include_annotations:
@@ -136,7 +141,7 @@ class MagicSeeker(Visitor):
                     + seeker._typevar_strings
                     + seeker._simple_string_consts_assignment
                 ).__contains__,
-                seeker._simple_strings,
+                seeker._simple_strings + seeker._formated_strings,
             )
         )
 

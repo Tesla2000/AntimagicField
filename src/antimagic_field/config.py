@@ -37,7 +37,6 @@ class Config(BaseModel):
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3
-    max_const_length_words: int = 3
     env_file_path: Path = Path(".env")
 
     def __init__(self, /, **data: Any):
