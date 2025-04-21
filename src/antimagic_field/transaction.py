@@ -4,6 +4,8 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
 
+from .str_consts.src.antimagic_field.transaction import CHANGES_REVERTED
+
 
 @contextmanager
 def transation(pos_args: Iterable[str]):
@@ -15,5 +17,5 @@ def transation(pos_args: Iterable[str]):
         print("Reverting changes please wait until process is done...")
         for path, content in zip(paths, contents):
             path.write_text(content)
-        print("Changes reverted")
+        print(CHANGES_REVERTED)
         raise

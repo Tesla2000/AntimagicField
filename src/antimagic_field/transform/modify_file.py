@@ -12,6 +12,8 @@ from ..config import Config
 from ..constants.const import Const
 from ..constants.previous_const import PreviousConst
 from ..filepath2import_path import filepath2import_path
+from ..str_consts.src.antimagic_field import COMA_SPACE
+from ..str_consts.src.antimagic_field import EMPTY
 from .magic_remover import MagicRemover
 
 
@@ -42,8 +44,8 @@ def modify_file(
     new_code = (
         before
         + annotations_import
-        + "".join(
-            f"from {filepath2import_path(source)} import {', '.join(frozenset(map(lambda const: const.const_name + config.const_name_suffix, source_consts)))}\n"
+        + EMPTY.join(
+            f"from {filepath2import_path(source)} import {COMA_SPACE.join(frozenset(map(lambda const: const.const_name + config.const_name_suffix, source_consts)))}\n"
             for source, source_consts in map_reduce(
                 consts, lambda const: const.get_import_filepath(config)
             ).items()

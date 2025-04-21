@@ -9,6 +9,17 @@ import libcst
 
 from ..config import Config
 from ..constants.const_base import ConstBase
+from ..str_consts.src.antimagic_field import COMA_SPACE
+from ..str_consts.src.antimagic_field import DIRECTORY
+from ..str_consts.src.antimagic_field import DOUBLE_QUOTES
+from ..str_consts.src.antimagic_field import EMPTY
+from ..str_consts.src.antimagic_field import NEWLINE
+from ..str_consts.src.antimagic_field import R
+from ..str_consts.src.antimagic_field import SPACE
+from ..str_consts.src.antimagic_field import STAR
+from ..str_consts.src.antimagic_field import UNDERSCORE
+from ..str_consts.src.antimagic_field.constants.const import QUESTION_MARK
+from ..str_consts.src.antimagic_field.constants.const import SINGLE_QUOTES
 from ..utils.formated_string2string import formated_string2string
 
 
@@ -20,7 +31,7 @@ class Const(ConstBase):
     _const_name: Optional[str] = None
 
     def get_import_filepath(self, config: Config) -> Path:
-        if config.consts_location == "directory":
+        if config.consts_location == DIRECTORY:
             if self._import_filepath:
                 return self._import_filepath.absolute()
             return origin2import(self.origin_filepath, config).absolute()
@@ -36,7 +47,7 @@ class Const(ConstBase):
 
     @property
     def is_rstring(self) -> bool:
-        return self.string_node.prefix == "r"
+        return self.string_node.prefix == R
 
     @property
     def value(self) -> str:
@@ -60,7 +71,7 @@ class Const(ConstBase):
     def set_const_name(
         self,
         const_name: Optional[str],
-        suffix: str = "",
+        suffix: str = EMPTY,
         max_n_parts: Optional[int] = 3,
     ):
         if const_name is None:
@@ -83,13 +94,13 @@ def _origin2import(origin_filepath: Path, consts_location_name: str) -> Path:
 
 
 _known_strings = {
-    "\n": "NEWLINE",
-    "*": "STAR",
-    ", ": "COMA_SPACE",
-    "?": "QUESTION_MARK",
-    "": "EMPTY",
-    "_": "UNDERSCORE",
-    " ": "SPACE",
-    '"': "DOUBLE_QUOTES",
-    "'": "SINGLE_QUOTES",
+    NEWLINE: "NEWLINE",
+    STAR: "STAR",
+    COMA_SPACE: "COMA_SPACE",
+    QUESTION_MARK: "QUESTION_MARK",
+    EMPTY: "EMPTY",
+    UNDERSCORE: "UNDERSCORE",
+    SPACE: "SPACE",
+    DOUBLE_QUOTES: "DOUBLE_QUOTES",
+    SINGLE_QUOTES: "SINGLE_QUOTES",
 }

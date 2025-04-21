@@ -11,6 +11,7 @@ from libcst import SimpleString
 
 from .config import Config
 from .constants.previous_const import PreviousConst
+from .str_consts.src.antimagic_field import R
 
 
 def read_consts(consts_file_path: Path, config: Config) -> list[PreviousConst]:
@@ -40,7 +41,7 @@ class _ConstantsGetter(libcst.CSTTransformer):
                         ),
                         node.value.evaluated_value,
                         self.filepath,
-                        is_rstring=node.value.prefix == "r",
+                        is_rstring=node.value.prefix == R,
                     )
                 )
             if isinstance(node.value, Name):
@@ -76,7 +77,7 @@ class _ConstantsGetter(libcst.CSTTransformer):
                     target.value.removesuffix(self.config.const_name_suffix),
                     node.value.evaluated_value,
                     self.filepath,
-                    is_rstring=node.value.prefix == "r",
+                    is_rstring=node.value.prefix == R,
                 )
             )
         return super().visit_AnnAssign(node)

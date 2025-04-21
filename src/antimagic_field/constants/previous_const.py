@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..config import Config
+from ..str_consts.src.antimagic_field import EMPTY
 from .const_base import ConstBase
 
 
@@ -17,7 +18,7 @@ class PreviousConst(ConstBase):
     previous_const_name: Optional[str] = None
     is_rstring: bool = False
 
-    def set_const_name(self, const_name: str, suffix: str = ""):
+    def set_const_name(self, const_name: str, suffix: str = EMPTY):
         self.previous_const_name = self.const_name
         self.const_name = self._format_const_name(const_name)
         if self.const_name:

@@ -15,6 +15,19 @@ from pydantic import Field
 from pydantic_core import PydanticUndefined
 
 from .custom_argument_parser import CustomArgumentParser
+from .str_consts.src.antimagic_field import DIRECTORY
+from .str_consts.src.antimagic_field import EMPTY
+from .str_consts.src.antimagic_field import IGNORE
+from .str_consts.src.antimagic_field import MOST_COMMON
+from .str_consts.src.antimagic_field import UNDERSCORE
+from .str_consts.src.antimagic_field.config import ARGS
+from .str_consts.src.antimagic_field.config import CONFIG_FILE
+from .str_consts.src.antimagic_field.config import CONST
+from .str_consts.src.antimagic_field.config import DEFAULT_FORMATTED
+from .str_consts.src.antimagic_field.config import ENV
+from .str_consts.src.antimagic_field.config import FORMATTED
+from .str_consts.src.antimagic_field.config import GENERATED_CONSTANTS
+from .str_consts.src.antimagic_field.config import POS_ARGS
 
 load_dotenv()
 
@@ -23,21 +36,21 @@ class Config(BaseModel):
     _root: Path = Path(__file__).parent
     pos_args: list[str] = Field(default_factory=list)
     config_file: Optional[Path] = None
-    consts_location: Literal["directory", "file", "local"] = "directory"
-    consts_location_name: str = "generated_constants"
+    consts_location: Literal["directory", "file", "local"] = DIRECTORY
+    consts_location_name: str = GENERATED_CONSTANTS
     modify: bool = True
     include_annotations: bool = False
-    const_name_suffix: str = "_CONST"
-    exclude: str = ""
+    const_name_suffix: str = CONST
+    exclude: str = EMPTY
     root: str = os.getcwd()
     duplicates_solver: Literal["exception", "ignore", "most_common"] = (
-        "most_common"
+        MOST_COMMON
     )
-    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ignore"
+    difficult_string_solver: Literal["exception", "ignore", "ai"] = IGNORE
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3
-    env_file_path: Path = Path(".env")
+    env_file_path: Path = Path(ENV)
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)
@@ -64,18 +77,18 @@ def parse_arguments(config_class: Type[Config]):
     )
 
     for name, value in config_class.model_fields.items():
-        if name.startswith("_"):
+        if name.startswith(UNDERSCORE):
             continue
         annotation = value.annotation
-        if len(getattr(value.annotation, "__args__", [])) > 1:
+        if len(getattr(value.annotation, ARGS, [])) > 1:
             annotation = next(filter(None, value.annotation.__args__))
         if get_origin(value.annotation) == Literal:
             annotation = str
         parser.add_argument(
-            f"--{name}" if name != "pos_args" else name,
+            FORMATTED.format(name) if name != POS_ARGS else name,
             type=annotation,
             default=value.default,
-            help=f"Default: {value}",
+            help=DEFAULT_FORMATTED.format(value),
         )
 
     return parser.parse_args()
@@ -87,11 +100,11 @@ def create_config_with_args(config_class: Type[Config], args) -> Config:
         for name in config_class.model_fields
         if hasattr(args, name) and getattr(args, name) != PydanticUndefined
     }
-    if arg_dict.get("config_file") and Path(arg_dict["config_file"]).exists():
+    if arg_dict.get(CONFIG_FILE) and Path(arg_dict[CONFIG_FILE]).exists():
         config = config_class(
             **{
                 **arg_dict,
-                **toml.load(arg_dict.get("config_file")),
+                **toml.load(arg_dict.get(CONFIG_FILE)),
             }
         )
     else:
@@ -100,7 +113,7 @@ def create_config_with_args(config_class: Type[Config], args) -> Config:
         value = getattr(config, variable)
         if (
             isinstance(value, Path)
-            and value.suffix == ""
+            and value.suffix == EMPTY
             and not value.exists()
         ):
             value.mkdir(parents=True)

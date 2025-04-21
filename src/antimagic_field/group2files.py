@@ -10,6 +10,7 @@ from .config import Config
 from .constants.const import Const
 from .constants.const import origin2import
 from .constants.const_base import ConstBase
+from .str_consts.src.antimagic_field import INIT_PY
 
 
 def group2files(
@@ -29,7 +30,7 @@ def group2files(
         ):
             filepath = filepath.parent
         if filepath.is_dir():
-            filepath = filepath.joinpath("__init__.py")
+            filepath = filepath.joinpath(INIT_PY)
         tuple(
             const.set_import_path(origin2import(filepath, config))
             for const in constants

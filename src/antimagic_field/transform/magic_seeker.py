@@ -21,6 +21,8 @@ from libcst import SimpleString
 from libcst import Subscript
 
 from ..config import Config
+from ..str_consts.src.antimagic_field.transform.magic_seeker import LITERAL
+from ..str_consts.src.antimagic_field.transform.magic_seeker import TYPE_VAR
 from .transformer import Visitor
 
 
@@ -79,7 +81,7 @@ class MagicSeeker(Visitor):
     def visit_Call(self, node: "Call") -> Optional[bool]:
         if (
             isinstance(node.func, Name)
-            and node.func.value == "TypeVar"
+            and node.func.value == TYPE_VAR
             and isinstance(node.args[0].value, SimpleString)
         ):
             self._typevar_strings.append(node.args[0].value)
@@ -89,7 +91,7 @@ class MagicSeeker(Visitor):
         if (
             (value := node.value)
             and isinstance(value, Name)
-            and value.value == "Literal"
+            and value.value == LITERAL
         ):
             self._string_annotations.extend(
                 chain.from_iterable(
@@ -145,8 +147,9 @@ class MagicSeeker(Visitor):
             )
         )
 
+    @staticmethod
     def _get_docstring(
-        self, node: Union["ClassDef", "FunctionDef"]
+        node: Union["ClassDef", "FunctionDef"],
     ) -> Optional[Union["SimpleString", "FormattedString"]]:
         if (
             isinstance(

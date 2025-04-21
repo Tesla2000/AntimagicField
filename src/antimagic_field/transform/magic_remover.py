@@ -17,6 +17,8 @@ from libcst import SimpleString
 
 from ..config import Config
 from ..constants.previous_const import PreviousConst
+from ..str_consts.src.antimagic_field.transform.magic_remover import EXPRESSION
+from ..str_consts.src.antimagic_field.transform.magic_remover import FORMAT
 from .transformer import Transformer
 
 
@@ -52,12 +54,12 @@ class MagicRemover(Transformer):
             return updated_node
         return Expr(
             Call(
-                Attribute(value=Name(const_name), attr=Name("format")),
+                Attribute(value=Name(const_name), attr=Name(FORMAT)),
                 args=list(
                     map(
                         Arg,
                         map(
-                            attrgetter("expression"),
+                            attrgetter(EXPRESSION),
                             filter(
                                 FormattedStringExpression.__instancecheck__,
                                 updated_node.parts,

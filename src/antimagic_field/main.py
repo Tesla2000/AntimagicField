@@ -28,6 +28,15 @@ from .group2files import group2files
 from .read_consts import read_consts
 from .save2files import save2files
 from .solve_duplicates import solve_duplicates
+from .str_consts.src.antimagic_field import DIRECTORY
+from .str_consts.src.antimagic_field import IGNORE
+from .str_consts.src.antimagic_field import MOST_COMMON
+from .str_consts.src.antimagic_field import NEWLINE
+from .str_consts.src.antimagic_field import PY
+from .str_consts.src.antimagic_field import SPACE
+from .str_consts.src.antimagic_field.main import AI
+from .str_consts.src.antimagic_field.main import EXCEPTION
+from .str_consts.src.antimagic_field.main import FOUND
 from .transaction import transation
 from .transform.modify_file import modify_file
 
@@ -51,7 +60,7 @@ def main() -> int:
                 config.pos_args,
                 Path(config.root)
                 .joinpath(config.consts_location_name)
-                .rglob("*.py"),
+                .rglob(PY),
             )
         )
     ):
@@ -60,13 +69,13 @@ def main() -> int:
 
 def _main(config: Config):
     fail = 0
-    print(" ".join(sys.argv))
+    print(SPACE.join(sys.argv))
     paths = map(Path, config.pos_args)
     modified_files: Sequence[Path] = tuple(
         filter(
             lambda path: path.suffix == ".py"
             and (
-                config.consts_location != "directory"
+                config.consts_location != DIRECTORY
                 or not path.is_relative_to(Path(config.consts_location_name))
             )
             and not config.is_excluded(path),
@@ -82,25 +91,25 @@ def _main(config: Config):
             for file in modified_files
         )
     )
-    if config.consts_location == "directory":
+    if config.consts_location == DIRECTORY:
         predefined_constants: Sequence[PreviousConst] = tuple(
             chain.from_iterable(
                 map(
                     partial(read_consts, config=config),
-                    Path(config.consts_location_name).rglob("*.py"),
+                    Path(config.consts_location_name).rglob(PY),
                 )
             )
         )
     else:
         raise ValueError("var_location can only be folder for now")
-    if config.difficult_string_solver == "ignore":
+    if config.difficult_string_solver == IGNORE:
         consts = tuple(
             filter(lambda const: const.const_name is not None, consts)
         )
     predefined_values = frozenset(
         const.value for const in predefined_constants
     )
-    if config.difficult_string_solver == "exception" and (
+    if config.difficult_string_solver == EXCEPTION and (
         difficult_constants := tuple(
             filter(
                 lambda const: const.const_name is None
@@ -114,18 +123,18 @@ def _main(config: Config):
             lambda const: const.origin_filepath,
             lambda const: const.value,
         ):
-            print(filepath, "found:", "\n".join(magical_strings))
+            print(filepath, FOUND, NEWLINE.join(magical_strings))
         return 1
     all_consts = (*consts, *predefined_constants)
     duplicates = solve_duplicates(all_consts)
     duplicate_values = frozenset(chain.from_iterable(duplicates.values()))
-    if duplicates and config.duplicates_solver == "exception":
+    if duplicates and config.duplicates_solver == EXCEPTION:
         for filepath, magical_strings in map_reduce(
             filter(lambda const: const.value in duplicate_values, consts),
             lambda const: const.origin_filepath,
             lambda const: const.value,
         ):
-            print(filepath, "found:", "\n".join(magical_strings))
+            print(filepath, FOUND, NEWLINE.join(magical_strings))
         return 1
     const_names = set(const.const_name for const in all_consts)
     if unnamed_constants := tuple(
@@ -143,20 +152,20 @@ def _main(config: Config):
             lambda const: const.origin_filepath,
             lambda const: const.value,
         ):
-            print(filepath, "found:", "\n".join(magical_strings))
+            print(filepath, FOUND, NEWLINE.join(magical_strings))
         return 1
-    if duplicates and config.duplicates_solver == "ai":
+    if duplicates and config.duplicates_solver == AI:
         try:
             ai_solve_duplicates(all_consts, config, const_names)
         except FailedToSolveDuplicates as e:
             print(
                 f"Failed to solve for following duplicates {e.duplicate_values}"
             )
-    elif config.duplicates_solver == "most_common":
+    elif config.duplicates_solver == MOST_COMMON:
         all_consts = _solve_duplicates_most_common(
             consts, predefined_constants
         )
-    elif config.duplicates_solver == "ignore":
+    elif config.duplicates_solver == IGNORE:
         all_consts = _solve_duplicates_ignore(consts, predefined_constants)
     consts = tuple(filter(Const.__instancecheck__, all_consts))
     predefined_constants = tuple(

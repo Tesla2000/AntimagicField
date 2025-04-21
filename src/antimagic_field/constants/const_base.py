@@ -11,6 +11,11 @@ from typing import Optional
 import inflect
 
 from ..config import Config
+from ..str_consts.src.antimagic_field import EMPTY
+from ..str_consts.src.antimagic_field import SPACE
+from ..str_consts.src.antimagic_field import UNDERSCORE
+from ..str_consts.src.antimagic_field.constants.const_base import A_ZA_Z
+from ..str_consts.src.antimagic_field.constants.const_base import S
 
 
 class ConstBase(ABC):
@@ -38,21 +43,21 @@ class ConstBase(ABC):
     def _format_const_name(
         const_name: str, max_n_parts: Optional[int] = 3
     ) -> Optional[str]:
-        const_name = const_name.replace("_", " ")
-        const_name = "".join(
+        const_name = const_name.replace(UNDERSCORE, SPACE)
+        const_name = EMPTY.join(
             filter(
                 allowed_chars.__contains__,
                 re.sub(
-                    r"([a-z])([A-Z])",
+                    A_ZA_Z,
                     r"\1_\2",
-                    re.sub(r"[\s/-]+", "_", const_name),
+                    re.sub(S, UNDERSCORE, const_name),
                 ).upper(),
             )
-        ).strip("_")
+        ).strip(UNDERSCORE)
         if (
-            not "".join(
+            not EMPTY.join(
                 filterfalse(string.hexdigits.__contains__, const_name)
-            ).replace("_", "")
+            ).replace(UNDERSCORE, EMPTY)
             and max_n_parts is not None
         ):
             return None
@@ -60,21 +65,26 @@ class ConstBase(ABC):
             num = re.findall(r"[\d,.]+", const_name)[0]
             const_name = re.sub(
                 r"[\d,.]+_?",
-                (p.number_to_words(num, comma="", andword="") + "_")
-                .replace(",", "")
-                .replace("-", "_")
+                (
+                    p.number_to_words(num, comma=EMPTY, andword=EMPTY)
+                    + UNDERSCORE
+                )
+                .replace(",", EMPTY)
+                .replace("-", UNDERSCORE)
                 .upper(),
                 const_name,
                 1,
-            ).replace(" ", "_")
-        if const_name != "_".join(const_name.split("_")[:max_n_parts]):
+            ).replace(SPACE, UNDERSCORE)
+        if const_name != UNDERSCORE.join(
+            const_name.split(UNDERSCORE)[:max_n_parts]
+        ):
             return None
-        return re.sub(r"_+", "_", const_name)
+        return re.sub(r"_+", UNDERSCORE, const_name)
 
     @property
     def defined_const_name(self):
         return self.const_name
 
 
-allowed_chars = (*string.digits, *string.ascii_letters, "_")
+allowed_chars = (*string.digits, *string.ascii_letters, UNDERSCORE)
 p = inflect.engine()

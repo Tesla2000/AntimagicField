@@ -7,6 +7,9 @@ from collections.abc import Sequence
 from more_itertools import map_reduce
 
 from .constants.const_base import ConstBase
+from .str_consts.src.antimagic_field.solve_duplicates import CAPITALIZED
+from .str_consts.src.antimagic_field.solve_duplicates import LOWERCASE
+from .str_consts.src.antimagic_field.solve_duplicates import UPPERCASE
 
 
 def solve_duplicates(
@@ -23,13 +26,13 @@ def solve_duplicates(
                 tuple(
                     const.set_const_name(
                         const.const_name,
-                        "_LOWERCASE",
+                        LOWERCASE,
                     )
                     for const in constants
                     if const.value == values[first]
                 )
                 tuple(
-                    const.set_const_name(const.const_name, "_CAPITALIZED")
+                    const.set_const_name(const.const_name, CAPITALIZED)
                     for const in constants
                     if const.value == values[second]
                 )
@@ -37,12 +40,12 @@ def solve_duplicates(
                 break
             if values[first].upper() == values[second]:
                 tuple(
-                    const.set_const_name(const.const_name, "_LOWERCASE")
+                    const.set_const_name(const.const_name, LOWERCASE)
                     for const in constants
                     if const.value == values[first]
                 )
                 tuple(
-                    const.set_const_name(const.const_name, "_UPPERCASE")
+                    const.set_const_name(const.const_name, UPPERCASE)
                     for const in constants
                     if const.value == values[second]
                 )

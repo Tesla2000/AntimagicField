@@ -18,6 +18,14 @@ from .config import Config
 from .constants.const_base import ConstBase
 from .constants.previous_const import PreviousConst
 from .filepath2import_path import filepath2import_path
+from .str_consts.src.antimagic_field import COMA_SPACE
+from .str_consts.src.antimagic_field import DOUBLE_QUOTES
+from .str_consts.src.antimagic_field import EMPTY
+from .str_consts.src.antimagic_field import NEWLINE
+from .str_consts.src.antimagic_field import R
+from .str_consts.src.antimagic_field import UNDERSCORE
+from .str_consts.src.antimagic_field.write_consts import N
+from .str_consts.src.antimagic_field.write_consts import VALUE
 
 
 def write_consts(
@@ -33,14 +41,17 @@ def write_consts(
     name_translator = {
         const.previous_const_name: const.const_name for const in renamed_consts
     }
-    moved_consts_str = ""
-    code = consts_file_path.read_text() if consts_file_path.exists() else ""
+    moved_consts_str = EMPTY
+    code = consts_file_path.read_text() if consts_file_path.exists() else EMPTY
     previous_moved_consts = []
     module = libcst.parse_module(code)
 
     class PreviousImportsExtractor(libcst.CSTVisitor):
         def visit_Assign(self, node: "Assign") -> Optional[bool]:
-            if len(node.targets) != 1 or node.targets[0].target.value != "_":
+            if (
+                len(node.targets) != 1
+                or node.targets[0].target.value != UNDERSCORE
+            ):
                 return super().visit_Assign(node)
             node.value.visit(ElementVisitor())
             return super().visit_Assign(node)
@@ -56,7 +67,7 @@ def write_consts(
     class ImportsExtractor(libcst.CSTVisitor):
         def visit_ImportFrom(self, node: "ImportFrom") -> Optional[bool]:
             previous_moved_consts_imports.extend(
-                f"from {'.'.join(map(attrgetter('value'), filter(Name.__instancecheck__, node.module.children + [node.module])))} import {alias.name.value}"
+                f"from {'.'.join(map(attrgetter(VALUE), filter(Name.__instancecheck__, node.module.children + [node.module])))} import {alias.name.value}"
                 for alias in filter(ImportAlias.__instancecheck__, node.names)
                 if alias.name.value in previous_moved_consts
             )
@@ -65,7 +76,7 @@ def write_consts(
     module.visit(ImportsExtractor())
     if moved_consts or previous_moved_consts_imports:
         moved_consts_str = (
-            "\n".join(
+            NEWLINE.join(
                 sorted(
                     {
                         *tuple(
@@ -77,7 +88,7 @@ def write_consts(
                 )
             )
             + "\n_ = "
-            + ", ".join(
+            + COMA_SPACE.join(
                 sorted(
                     {
                         *tuple(
@@ -89,7 +100,7 @@ def write_consts(
                     }
                 )
             )
-            + "\n"
+            + NEWLINE
         )
     names = tuple(
         name_translator.get(const.const_name, const.const_name)
@@ -99,10 +110,10 @@ def write_consts(
     contents = (
         "from typing import Final\nfrom typing import Literal\n"
         + moved_consts_str
-        + "\n".join(
+        + NEWLINE.join(
             sorted(
                 frozenset(
-                    f'{name}: Final[Literal[{"r" * const.is_rstring}"{('\n' in (value := const.value)) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"]] = {"r" * const.is_rstring}"{('\n' in value) * '""'}{value.replace('"', r"\"")}{('\n' in value) * '""'}"'
+                    f'{name}: Final[Literal[{R * const.is_rstring}"{(NEWLINE in (value := const.value)) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"]] = {R * const.is_rstring}"{(NEWLINE in value) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"'
                     for name, const in zip(names, consts)
                 )
             )
@@ -117,14 +128,14 @@ def write_consts(
                 len(node.targets) == 1
                 and isinstance(node.children[1], Name)
                 and isinstance(node.targets[0].target, Name)
-                and node.targets[0].target.value not in (*names, "_")
+                and node.targets[0].target.value not in (*names, UNDERSCORE)
             ):
-                previous_assignments.append("\n" + Module([node]).code)
+                previous_assignments.append(NEWLINE + Module([node]).code)
             return super().visit_Assign(node)
 
     module.visit(PreviousAssignmentExtractor())
-    contents = contents.replace('"\n"', '"\\n"')
-    contents += "".join(
+    contents = contents.replace('"\n"', N)
+    contents += EMPTY.join(
         filterfalse(
             previous_assignments.__contains__,
             (
@@ -133,5 +144,5 @@ def write_consts(
             ),
         )
     )
-    contents += "".join(previous_assignments)
+    contents += EMPTY.join(previous_assignments)
     consts_file_path.write_text(contents)

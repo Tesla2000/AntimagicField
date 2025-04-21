@@ -18,6 +18,13 @@ from .constants.const import Const
 from .constants.const_base import ConstBase
 from .exceptions import FailedToSolveDuplicates
 from .solve_duplicates import solve_duplicates
+from .str_consts.src.antimagic_field import EMPTY
+from .str_consts.src.antimagic_field.ai_solve import CONTENT
+from .str_consts.src.antimagic_field.ai_solve import FIELD_NAMES
+from .str_consts.src.antimagic_field.ai_solve import MESSAGE
+from .str_consts.src.antimagic_field.ai_solve import ROLE
+from .str_consts.src.antimagic_field.ai_solve import STRING_FORMATTED
+from .str_consts.src.antimagic_field.ai_solve import USER
 
 
 def ai_solve_duplicates(
@@ -67,8 +74,8 @@ def _ai_assign_names(
             config.ai_model,
             messages=[
                 {
-                    "role": "user",
-                    "content": (
+                    ROLE: USER,
+                    CONTENT: (
                         "Peak suitable constant names for the following string. "
                         "Constant names must be uppercase ascii strings with "
                         "words connected by _ with no more than 5 words. "
@@ -79,24 +86,27 @@ def _ai_assign_names(
             ],
             temperature=0.0,
             response_format=_create_response_format(solving_batch),
-        ).choices[0]["message"]["content"]
+        ).choices[0][MESSAGE][CONTENT]
     )
     for const in filter(Const.__instancecheck__, all_constants):
         if const.value in solved_values and (
             solution := solutions.get(
-                f"string{solved_values.index(const.value) + 1}"
+                STRING_FORMATTED.format(solved_values.index(const.value) + 1)
             )
         ):
-            const.set_const_name(solution, "", None)
+            const.set_const_name(solution, EMPTY, None)
             const_names.add(const.const_name)
 
 
 def _create_response_format(consts: Collection[Const]) -> Type[BaseModel]:
     return create_model(
-        "FieldNames",
+        FIELD_NAMES,
         __doc__="Descriptions contain values of constants that the names should be assigned to",
         **{
-            f"string{index}": (str, Field(description=const.value))
+            STRING_FORMATTED.format(index): (
+                str,
+                Field(description=const.value),
+            )
             for index, const in enumerate(consts, 1)
         },
     )
