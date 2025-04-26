@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 from collections.abc import Sequence
 from pathlib import Path
@@ -23,4 +24,10 @@ def save2files(
             file_switching_consts.get(path, []),
             renamed_consts.get(path, []),
             config,
+        )
+    if config.formatting is not None:
+        os.system(
+            config.formatting.format(
+                filepaths=" ".join(map(str, grouped_consts.keys()))
+            ).replace(r"\n", "\n")
         )

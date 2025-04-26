@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from argparse import Namespace
 from pathlib import Path
 from typing import Any
 from typing import get_origin
@@ -8,7 +9,7 @@ from typing import Literal
 from typing import Optional
 from typing import Type
 
-import toml
+import toml  # type: ignore
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from pydantic import Field
@@ -50,10 +51,16 @@ class Config(BaseModel):
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3
+    formatting: Optional[str] = None
+    suppress_fail: bool = False
     env_file_path: Path = Path(ENV)
 
     def __init__(self, /, **data: Any):
         super().__init__(**data)
+        if self.formatting and "{filepaths}" not in self.formatting:
+            raise ValueError(
+                "{filepaths}" + " placeholder must be included in --formatting"
+            )
         load_dotenv(self._env_path)
 
     @property
@@ -63,7 +70,7 @@ class Config(BaseModel):
         return self.root / self.env_file_path
 
     def is_excluded(self, path: Path) -> bool:
-        return self.exclude and any(
+        return bool(self.exclude) and any(
             map(
                 path.absolute().is_relative_to,
                 map(Path.absolute, map(Path, self.exclude.split(","))),
@@ -71,7 +78,7 @@ class Config(BaseModel):
         )
 
 
-def parse_arguments(config_class: Type[Config]):
+def parse_arguments(config_class: Type[Config]) -> Namespace:
     parser = CustomArgumentParser(
         description="Configure the application settings."
     )
@@ -80,8 +87,8 @@ def parse_arguments(config_class: Type[Config]):
         if name.startswith(UNDERSCORE):
             continue
         annotation = value.annotation
-        if len(getattr(value.annotation, ARGS, [])) > 1:
-            annotation = next(filter(None, value.annotation.__args__))
+        if len(args := getattr(annotation, ARGS, [])) > 1:
+            annotation = next(filter(None, args))
         if get_origin(value.annotation) == Literal:
             annotation = str
         parser.add_argument(
@@ -94,7 +101,9 @@ def parse_arguments(config_class: Type[Config]):
     return parser.parse_args()
 
 
-def create_config_with_args(config_class: Type[Config], args) -> Config:
+def create_config_with_args(
+    config_class: Type[Config], args: Namespace
+) -> Config:
     arg_dict = {
         name: getattr(args, name)
         for name in config_class.model_fields

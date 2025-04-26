@@ -213,7 +213,14 @@ def _main(config: Config):
             },
             config=config,
         )
-    return fail
+
+    if config.formatting is not None:
+        os.system(
+            config.formatting.format(
+                filepaths=" ".join(map(str, modified_files))
+            ).replace(r"\n", "\n")
+        )
+    return fail and not config.suppress_fail
 
 
 def _solve_duplicates_most_common(
