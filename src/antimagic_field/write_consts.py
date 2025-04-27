@@ -147,6 +147,7 @@ def write_consts(
                 and isinstance(node.children[1], Name)
                 and isinstance(node.targets[0].target, Name)
                 and node.targets[0].target.value not in (*names, UNDERSCORE)
+                and node.targets[0].target.value != node.children[1].value
             ):
                 previous_assignments.append(NEWLINE + Module([node]).code)
             return super().visit_Assign(node)
@@ -161,11 +162,14 @@ def write_consts(
                     (
                         f"\n{key}{config.const_name_suffix} = {value}{config.const_name_suffix}"
                         for key, value in name_translator.items()
+                        if key != value
                     ),
                     (
                         f"\n{const.const_name}{config.const_name_suffix} = {consts[0].const_name}{config.const_name_suffix}"
                         for consts in duplicate_const_groups
                         for const in consts[1:]
+                        if f"{const.const_name}{config.const_name_suffix}"
+                        != f"{consts[0].const_name}{config.const_name_suffix}"
                     ),
                 )
             ),
