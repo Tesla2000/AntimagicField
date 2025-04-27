@@ -7,7 +7,6 @@ from collections.abc import Iterable
 from itertools import chain
 from typing import Type
 
-from litellm import completion
 from more_itertools import batched
 from pydantic import BaseModel
 from pydantic import create_model
@@ -68,6 +67,8 @@ def _ai_assign_names(
     const_names: set[str],
     all_constants: Iterable[ConstBase],
 ):
+    from litellm import completion
+
     solved_values = tuple(const.value for const in solving_batch)
     solutions = json.loads(
         completion(

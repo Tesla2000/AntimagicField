@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Collection
 from collections.abc import Sequence
+from itertools import chain
 from itertools import filterfalse
 from operator import attrgetter
 from pathlib import Path
@@ -13,6 +14,7 @@ from libcst import ImportAlias
 from libcst import ImportFrom
 from libcst import Module
 from libcst import Name
+from more_itertools.more import map_reduce
 
 from .config import Config
 from .constants.const_base import ConstBase
@@ -107,14 +109,30 @@ def write_consts(
         + config.const_name_suffix
         for const in consts
     )
+    duplicate_const_groups = tuple(
+        values
+        for _, values in map_reduce(consts, lambda const: const.value).items()
+        if len(values) > 1
+    )
+    duplicate_consts = tuple(chain.from_iterable(duplicate_const_groups))
     contents = (
         "from typing import Final\nfrom typing import Literal\n"
         + moved_consts_str
         + NEWLINE.join(
             sorted(
                 frozenset(
-                    f'{name}: Final[Literal[{R * const.is_rstring}"{(NEWLINE in (value := const.value)) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"]] = {R * const.is_rstring}"{(NEWLINE in value) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"'
+                    _line(name, const)
                     for name, const in zip(names, consts)
+                    if const not in duplicate_consts
+                ).union(
+                    _line(
+                        name_translator.get(
+                            consts[0].const_name, consts[0].const_name
+                        )
+                        + config.const_name_suffix,
+                        consts[0],
+                    )
+                    for consts in duplicate_const_groups
                 )
             )
         )
@@ -138,11 +156,24 @@ def write_consts(
     contents += EMPTY.join(
         filterfalse(
             previous_assignments.__contains__,
-            (
-                f"\n{key}{config.const_name_suffix} = {value}{config.const_name_suffix}"
-                for key, value in name_translator.items()
+            chain.from_iterable(
+                (
+                    (
+                        f"\n{key}{config.const_name_suffix} = {value}{config.const_name_suffix}"
+                        for key, value in name_translator.items()
+                    ),
+                    (
+                        f"\n{const.const_name}{config.const_name_suffix} = {consts[0].const_name}{config.const_name_suffix}"
+                        for consts in duplicate_const_groups
+                        for const in consts[1:]
+                    ),
+                )
             ),
         )
     )
     contents += EMPTY.join(previous_assignments)
     consts_file_path.write_text(contents)
+
+
+def _line(name: str, const: ConstBase) -> str:
+    return f'{name}: Final[Literal[{R * const.is_rstring}"{(NEWLINE in (value := const.value)) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"]] = {R * const.is_rstring}"{(NEWLINE in value) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"'
