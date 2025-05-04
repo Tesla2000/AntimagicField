@@ -18,12 +18,10 @@ from pydantic_core import PydanticUndefined
 from .custom_argument_parser import CustomArgumentParser
 from .str_consts.src.antimagic_field import DIRECTORY
 from .str_consts.src.antimagic_field import EMPTY
-from .str_consts.src.antimagic_field import IGNORE
 from .str_consts.src.antimagic_field import MOST_COMMON
 from .str_consts.src.antimagic_field import UNDERSCORE
 from .str_consts.src.antimagic_field.config import ARGS
 from .str_consts.src.antimagic_field.config import CONFIG_FILE
-from .str_consts.src.antimagic_field.config import CONST
 from .str_consts.src.antimagic_field.config import DEFAULT_FORMATTED
 from .str_consts.src.antimagic_field.config import ENV
 from .str_consts.src.antimagic_field.config import FORMATTED
@@ -41,14 +39,15 @@ class Config(BaseModel):
     consts_location_name: str = GENERATED_CONSTANTS
     modify: bool = True
     include_annotations: bool = False
-    const_name_suffix: str = CONST
+    const_name_suffix: str = ""
     exclude: str = EMPTY
     root: str = os.getcwd()
     duplicates_solver: Literal["exception", "ignore", "most_common"] = (
         MOST_COMMON
     )
-    difficult_string_solver: Literal["exception", "ignore", "ai"] = IGNORE
+    difficult_string_solver: Literal["exception", "ignore", "ai"] = "ai"
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
+    allowed_consts: str = r"[\s\S]*"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3
     formatting: Optional[str] = None

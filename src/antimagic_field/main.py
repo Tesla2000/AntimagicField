@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 from collections import Counter
 from collections.abc import Collection
@@ -167,6 +168,12 @@ def _main(config: Config):
         )
     elif config.duplicates_solver == IGNORE:
         all_consts = _solve_duplicates_ignore(consts, predefined_constants)
+    all_consts = tuple(
+        filter(
+            lambda const: re.findall(config.allowed_consts, const.value),
+            all_consts,
+        )
+    )
     consts = tuple(filter(Const.__instancecheck__, all_consts))
     predefined_constants = tuple(
         filter(PreviousConst.__instancecheck__, all_consts)
