@@ -20,7 +20,7 @@ pydantic = {extras = ["mypy"], version = "^2.11.3"}
 
 
 [tool.poetry.group.ai.dependencies]
-litellm = "^1.67.4"
+litellm = "1.67.2"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 from collections import Counter
 from collections.abc import Collection
 from collections.abc import Sequence
 from functools import partial
 from itertools import chain
+from itertools import filterfalse
 from pathlib import Path
 from typing import Optional
 
@@ -167,6 +169,13 @@ def _main(config: Config):
         )
     elif config.duplicates_solver == IGNORE:
         all_consts = _solve_duplicates_ignore(consts, predefined_constants)
+    removed_consts = tuple(
+        filterfalse(
+            lambda const: re.findall(config.allowed_consts, const.value),
+            all_consts,
+        )
+    )
+    all_consts = tuple(filterfalse(removed_consts.__contains__, all_consts))
     consts = tuple(filter(Const.__instancecheck__, all_consts))
     predefined_constants = tuple(
         filter(PreviousConst.__instancecheck__, all_consts)
@@ -210,6 +219,10 @@ def _main(config: Config):
             renamed_consts={
                 filepath2import_path(key): value
                 for key, value in renamed_consts.items()
+            },
+            removed_values={
+                const.const_name + config.const_name_suffix: const
+                for const in removed_consts
             },
             config=config,
         )

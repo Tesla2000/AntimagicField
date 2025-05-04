@@ -22,10 +22,11 @@ def modify_file(
     consts: Collection[Const],
     module: Module,
     renamed_consts: Mapping[str, Sequence[PreviousConst]],
+    removed_values: Mapping[str, Const],
     config: Config,
 ) -> int:
-    if not consts:
-        return 0
+    # if not consts:
+    #     return 0
     code = filepath.read_text()
     new_code = module.visit(
         MagicRemover(
@@ -36,6 +37,7 @@ def modify_file(
                 if const.const_name
             },
             renamed_consts,
+            removed_values,
         )
     ).code
     before, annotations_import, rest = new_code.rpartition(
