@@ -47,7 +47,7 @@ class Config(BaseModel):
     )
     difficult_string_solver: Literal["exception", "ignore", "ai"] = "ai"
     ai_model: str = "anthropic/claude-3-5-sonnet-20240620"
-    allowed_consts: str = r"[\s\S]*"
+    allowed_consts: str = r"(?=.*\s)[\s\S]{50,}"
     ai_solving_batch: int = 30
     max_duplicates_solve_attempts: int = 3
     formatting: Optional[str] = None

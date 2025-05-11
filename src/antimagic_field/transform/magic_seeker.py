@@ -8,6 +8,9 @@ from typing import Union
 
 from libcst import Annotation
 from libcst import Assign
+from libcst import BaseSmallStatement
+from libcst import BaseStatement
+from libcst import BaseSuite
 from libcst import Call
 from libcst import ClassDef
 from libcst import ConcatenatedString
@@ -15,6 +18,7 @@ from libcst import CSTNode
 from libcst import Expr
 from libcst import FormattedString
 from libcst import FunctionDef
+from libcst import Module
 from libcst import Name
 from libcst import SimpleStatementLine
 from libcst import SimpleString
@@ -44,15 +48,11 @@ class MagicSeeker(Visitor):
         ] = list()
 
     def visit_ClassDef_body(self, node: "ClassDef") -> None:
-        doc = self._get_docstring(node)
-        if doc:
-            self._docstrings.append(doc)
+        self._docstrings.extend(self._get_docstrings(node.body))
         return super().visit_ClassDef_body(node)
 
     def visit_FunctionDef_body(self, node: "FunctionDef") -> None:
-        doc = self._get_docstring(node)
-        if doc:
-            self._docstrings.append(doc)
+        self._docstrings.extend(self._get_docstrings(node.body))
         return super().visit_FunctionDef_body(node)
 
     def visit_Assign(self, node: "Assign") -> Optional[bool]:
@@ -131,6 +131,8 @@ class MagicSeeker(Visitor):
         cls, module: CSTNode, config: Config
     ) -> Sequence[Union["SimpleString", "FormattedString"]]:
         seeker = cls(config)
+        if isinstance(module, Module):
+            seeker._docstrings.extend(seeker._get_docstrings(module))
         module.visit(seeker)
         if config.include_annotations:
             return seeker._simple_strings
@@ -147,17 +149,23 @@ class MagicSeeker(Visitor):
             )
         )
 
+    @classmethod
+    def _get_docstrings(
+        cls,
+        node: "BaseSuite",
+    ) -> tuple[Union["SimpleString", "FormattedString"], ...]:
+        return tuple(filter(None, map(cls._get_docstring, node.body)))
+
     @staticmethod
     def _get_docstring(
-        node: Union["ClassDef", "FunctionDef"],
+        line_statement: Union["BaseStatement", "BaseSmallStatement"],
     ) -> Optional[Union["SimpleString", "FormattedString"]]:
-        if (
-            isinstance(
-                line_statements := node.body.body[0], SimpleStatementLine
-            )
-            and isinstance(expr := line_statements.body[0], Expr)
-            and isinstance(
-                string := expr.value, (SimpleString, FormattedString)
-            )
-        ):
-            return string
+        if not isinstance(line_statement, SimpleStatementLine):
+            return None
+        expr = line_statement.body[0]
+        if not isinstance(expr, Expr):
+            return None
+        string = expr.value
+        if not isinstance(string, (SimpleString, FormattedString)):
+            return None
+        return string

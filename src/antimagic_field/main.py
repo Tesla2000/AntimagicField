@@ -170,7 +170,8 @@ def _main(config: Config):
         all_consts = _solve_duplicates_ignore(consts, predefined_constants)
     all_consts = tuple(
         filter(
-            lambda const: re.findall(config.allowed_consts, const.value),
+            lambda const: re.findall(config.allowed_consts, const.value)
+            or isinstance(const, PreviousConst),
             all_consts,
         )
     )
@@ -179,6 +180,7 @@ def _main(config: Config):
         filter(PreviousConst.__instancecheck__, all_consts)
     )
     grouped_files = group2files(all_consts, config)
+    del all_consts
     file_switching_consts = map_reduce(
         filter(
             lambda const: all(
