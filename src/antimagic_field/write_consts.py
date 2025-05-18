@@ -116,7 +116,7 @@ def write_consts(
     )
     duplicate_consts = tuple(chain.from_iterable(duplicate_const_groups))
     contents = (
-        "from typing import Final\nfrom typing import Literal\n"
+        "from typing import Final\n"
         + moved_consts_str
         + NEWLINE.join(
             sorted(
@@ -180,4 +180,4 @@ def write_consts(
 
 
 def _line(name: str, const: ConstBase) -> str:
-    return f'{name}: Final[Literal[{R * const.is_rstring}"{(NEWLINE in (value := const.value)) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"]] = {R * const.is_rstring}"{(NEWLINE in value) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"'
+    return f'{name}: Final[str] = {R * const.is_rstring}"{(NEWLINE in (value := const.value)) * '""'}{value.replace(DOUBLE_QUOTES, r"\"")}{(NEWLINE in value) * '""'}"'
