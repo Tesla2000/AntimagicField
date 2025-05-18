@@ -4,11 +4,11 @@ import json
 import sys
 from collections.abc import Collection
 from collections.abc import Iterable
-from itertools import batched
 from itertools import chain
 from typing import Type
 
 from litellm import completion
+from more_itertools import batched
 from pydantic import BaseModel
 from pydantic import create_model
 from pydantic import Field
