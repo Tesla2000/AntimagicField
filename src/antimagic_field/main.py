@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 from libcst import parse_module
-from more_itertools.more import map_reduce
+from more_itertools import map_reduce
 
 from .ai_solve import ai_assign_names
 from .ai_solve import ai_solve_duplicates

@@ -6,6 +6,9 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 import cachetools.func
+from consts import GOOD_MODELS
+from consts import LONG_CONTEXT
+from consts import MAX_ITERATIONS_WITHOUT_COMPLETION
 from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 from modules.action_plan_step import ActionPlanStep
@@ -19,10 +22,6 @@ from prompts.emergency_fund import EMERGENCY_FUND_SAVINGS_ACCOUNTS
 from prompts.emergency_fund import HIGH_YIELD_ACCOUNTS_PROMPT
 from prompts.emergency_fund import SHORT_TERM_DISABILITY_INSURANCE_PROMPT
 from utils.model_manager import ModelManager
-
-from consts import GOOD_MODELS
-from consts import LONG_CONTEXT
-from consts import MAX_ITERATIONS_WITHOUT_COMPLETION
 
 if TYPE_CHECKING:
     from state import State

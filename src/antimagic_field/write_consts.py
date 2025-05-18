@@ -14,7 +14,7 @@ from libcst import ImportAlias
 from libcst import ImportFrom
 from libcst import Module
 from libcst import Name
-from more_itertools.more import map_reduce
+from more_itertools import map_reduce
 
 from .config import Config
 from .constants.const_base import ConstBase

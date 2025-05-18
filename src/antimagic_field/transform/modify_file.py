@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from libcst import Module
-from more_itertools.more import map_reduce
+from more_itertools import map_reduce
 
 from ..config import Config
 from ..constants.const import Const

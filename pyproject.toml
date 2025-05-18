@@ -12,15 +12,12 @@ pydantic = "^2.8.2"
 toml = "^0.10.2"
 libcst = "^1.7.0"
 inflect = "^7.5.0"
+litellm = "1.67.2"
 
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
 pydantic = {extras = ["mypy"], version = "^2.11.3"}
-
-
-[tool.poetry.group.ai.dependencies]
-litellm = "1.67.2"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
